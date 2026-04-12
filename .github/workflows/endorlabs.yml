@@ -21,7 +21,7 @@ jobs:
     - name: Pre-build Bazel scan targets
       run: |
         query_rc=0
-        bazel query --keep_going 'kind("py_binary", //bazel/... + //buildscripts/... + //evergreen/... + //modules_poc/... + //src/... + //tools/...) + kind("py_library", //bazel/... + //buildscripts/... + //evergreen/... + //modules_poc/... + //src/... + //tools/...) + kind("rust_library", //bazel/... + //buildscripts/... + //evergreen/... + //modules_poc/... + //src/... + //tools/...)' > .endorlabs.bazel.targets 2>.endorlabs.bazel.query.log || query_rc=$?
+        bazel query --config=local --keep_going 'kind("py_binary", //bazel/... + //buildscripts/... + //evergreen/... + //modules_poc/... + //src/... + //tools/...) + kind("py_library", //bazel/... + //buildscripts/... + //evergreen/... + //modules_poc/... + //src/... + //tools/...) + kind("rust_library", //bazel/... + //buildscripts/... + //evergreen/... + //modules_poc/... + //src/... + //tools/...)' > .endorlabs.bazel.targets 2>.endorlabs.bazel.query.log || query_rc=$?
         if [ "$query_rc" -ne 0 ] && [ "$query_rc" -ne 3 ]; then
           cat .endorlabs.bazel.query.log >&2
           exit "$query_rc"
@@ -31,7 +31,7 @@ jobs:
           echo "No Bazel targets resolved for the Endor Labs scan" >&2
           exit 1
         fi
-        xargs bazel build --keep_going < .endorlabs.bazel.targets || echo "Warning: some Bazel targets failed to build (e.g. platform-incompatible). The scan will analyze what built successfully." >&2
+        xargs bazel build --config=local --keep_going < .endorlabs.bazel.targets || echo "Warning: some Bazel targets failed to build (e.g. platform-incompatible). The scan will analyze what built successfully." >&2
     - name: Endor Labs PR Scan
       if: github.event_name == 'pull_request'
       uses: endorlabs/github-action@b8992820cc4d9c9e7ded5022adf6cabe2dc11946
