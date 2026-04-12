@@ -1,0 +1,66 @@
+name: Endor Labs Scan
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      security-events: write
+      contents: read
+      id-token: write
+      pull-requests: write
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+    - name: Set up Bazelisk
+      uses: bazelbuild/setup-bazelisk@v3
+    - name: Pre-build Bazel scan targets
+      run: |
+        bazel query 'kind("js_library", ///... + //bazel/... + //buildscripts/... + //evergreen/... + //jstests/... + //modules_poc/... + //src/... + //tools/...) + kind("py_binary", ///... + //bazel/... + //buildscripts/... + //evergreen/... + //jstests/... + //modules_poc/... + //src/... + //tools/...) + kind("py_library", ///... + //bazel/... + //buildscripts/... + //evergreen/... + //jstests/... + //modules_poc/... + //src/... + //tools/...) + kind("rust_library", ///... + //bazel/... + //buildscripts/... + //evergreen/... + //jstests/... + //modules_poc/... + //src/... + //tools/...)' > .endorlabs.bazel.targets
+        if [ ! -s .endorlabs.bazel.targets ]; then
+          echo "No Bazel targets resolved for the Endor Labs scan" >&2
+          exit 1
+        fi
+        xargs bazel build < .endorlabs.bazel.targets
+    - name: Endor Labs PR Scan
+      if: github.event_name == 'pull_request'
+      uses: endorlabs/github-action@b8992820cc4d9c9e7ded5022adf6cabe2dc11946
+      env:
+        ENDOR_SCAN_ENABLE_PRECOMPUTED_CALLGRAPHS: "true"
+      with:
+        namespace: "endor-solutions-ypulse.github-ci"
+        scan_dependencies: true
+        scan_secrets: false
+        pr: true
+        pr_incremental: true
+        enable_pr_comments: true
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        enable_github_action_token: true
+        use_bazel: true
+        bazel_targets_query: 'kind("js_library", ///... + //bazel/... + //buildscripts/... + //evergreen/... + //jstests/... + //modules_poc/... + //src/... + //tools/...) + kind("py_binary", ///... + //bazel/... + //buildscripts/... + //evergreen/... + //jstests/... + //modules_poc/... + //src/... + //tools/...) + kind("py_library", ///... + //bazel/... + //buildscripts/... + //evergreen/... + //jstests/... + //modules_poc/... + //src/... + //tools/...) + kind("rust_library", ///... + //bazel/... + //buildscripts/... + //evergreen/... + //jstests/... + //modules_poc/... + //src/... + //tools/...)'
+        additional_args: "--quick-scan"
+        scan_summary_output_type: "table"
+        sarif_file: findings.sarif
+    - name: Endor Labs Monitor Scan
+      if: github.event_name == 'push'
+      uses: endorlabs/github-action@b8992820cc4d9c9e7ded5022adf6cabe2dc11946
+      with:
+        namespace: "endor-solutions-ypulse.github-ci"
+        scan_dependencies: true
+        scan_secrets: false
+        pr: false
+        enable_github_action_token: true
+        use_bazel: true
+        bazel_targets_query: 'kind("js_library", ///... + //bazel/... + //buildscripts/... + //evergreen/... + //jstests/... + //modules_poc/... + //src/... + //tools/...) + kind("py_binary", ///... + //bazel/... + //buildscripts/... + //evergreen/... + //jstests/... + //modules_poc/... + //src/... + //tools/...) + kind("py_library", ///... + //bazel/... + //buildscripts/... + //evergreen/... + //jstests/... + //modules_poc/... + //src/... + //tools/...) + kind("rust_library", ///... + //bazel/... + //buildscripts/... + //evergreen/... + //jstests/... + //modules_poc/... + //src/... + //tools/...)'
+        additional_args: "--use-bazel-aspects"
+        sarif_file: findings.sarif
+    - name: Upload SARIF
+      if: always()
+      uses: github/codeql-action/upload-sarif@v4
+      continue-on-error: true
+      with:
+        sarif_file: findings.sarif
