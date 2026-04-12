@@ -1,4 +1,4 @@
-name: Endor Labs Scan
+name: Endor Labs Scan Test
 on:
   push:
     branches: [ main ]
