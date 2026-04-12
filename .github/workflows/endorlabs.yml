@@ -1,9 +1,9 @@
-name: Endor Labs Scan Test
+name: Endor Labs Scan
 on:
   push:
-    branches: [ main ]
+    branches: [ master ]
   pull_request:
-    branches: [ main ]
+    branches: [ master ]
 jobs:
   scan:
     runs-on: ubuntu-latest
