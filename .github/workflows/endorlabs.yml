@@ -1,9 +1,9 @@
 name: Endor Labs Scan
 on:
   push:
-    branches: [ master ]
+    branches: [ main ]
   pull_request:
-    branches: [ master ]
+    branches: [ main ]
 jobs:
   scan:
     runs-on: ubuntu-latest
@@ -20,8 +20,14 @@ jobs:
       uses: bazelbuild/setup-bazelisk@v3
     - name: Pre-build Bazel scan targets
       run: |
-        bazel query 'kind("js_library", ///... + //bazel/... + //buildscripts/... + //evergreen/... + //jstests/... + //modules_poc/... + //src/... + //tools/...) + kind("py_binary", ///... + //bazel/... + //buildscripts/... + //evergreen/... + //jstests/... + //modules_poc/... + //src/... + //tools/...) + kind("py_library", ///... + //bazel/... + //buildscripts/... + //evergreen/... + //jstests/... + //modules_poc/... + //src/... + //tools/...) + kind("rust_library", ///... + //bazel/... + //buildscripts/... + //evergreen/... + //jstests/... + //modules_poc/... + //src/... + //tools/...)' > .endorlabs.bazel.targets
+        query_rc=0
+        bazel query --keep_going 'kind("js_library", //bazel/... + //buildscripts/... + //evergreen/... + //jstests/... + //modules_poc/... + //src/... + //tools/...) + kind("py_binary", //bazel/... + //buildscripts/... + //evergreen/... + //jstests/... + //modules_poc/... + //src/... + //tools/...) + kind("py_library", //bazel/... + //buildscripts/... + //evergreen/... + //jstests/... + //modules_poc/... + //src/... + //tools/...) + kind("rust_library", //bazel/... + //buildscripts/... + //evergreen/... + //jstests/... + //modules_poc/... + //src/... + //tools/...)' > .endorlabs.bazel.targets 2>.endorlabs.bazel.query.log || query_rc=$?
+        if [ "$query_rc" -ne 0 ] && [ "$query_rc" -ne 3 ]; then
+          cat .endorlabs.bazel.query.log >&2
+          exit "$query_rc"
+        fi
         if [ ! -s .endorlabs.bazel.targets ]; then
+          cat .endorlabs.bazel.query.log >&2
           echo "No Bazel targets resolved for the Endor Labs scan" >&2
           exit 1
         fi
@@ -41,7 +47,7 @@ jobs:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         enable_github_action_token: true
         use_bazel: true
-        bazel_targets_query: 'kind("js_library", ///... + //bazel/... + //buildscripts/... + //evergreen/... + //jstests/... + //modules_poc/... + //src/... + //tools/...) + kind("py_binary", ///... + //bazel/... + //buildscripts/... + //evergreen/... + //jstests/... + //modules_poc/... + //src/... + //tools/...) + kind("py_library", ///... + //bazel/... + //buildscripts/... + //evergreen/... + //jstests/... + //modules_poc/... + //src/... + //tools/...) + kind("rust_library", ///... + //bazel/... + //buildscripts/... + //evergreen/... + //jstests/... + //modules_poc/... + //src/... + //tools/...)'
+        bazel_targets_query: 'kind("js_library", //bazel/... + //buildscripts/... + //evergreen/... + //jstests/... + //modules_poc/... + //src/... + //tools/...) + kind("py_binary", //bazel/... + //buildscripts/... + //evergreen/... + //jstests/... + //modules_poc/... + //src/... + //tools/...) + kind("py_library", //bazel/... + //buildscripts/... + //evergreen/... + //jstests/... + //modules_poc/... + //src/... + //tools/...) + kind("rust_library", //bazel/... + //buildscripts/... + //evergreen/... + //jstests/... + //modules_poc/... + //src/... + //tools/...)'
         additional_args: "--quick-scan"
         scan_summary_output_type: "table"
         sarif_file: findings.sarif
@@ -55,7 +61,7 @@ jobs:
         pr: false
         enable_github_action_token: true
         use_bazel: true
-        bazel_targets_query: 'kind("js_library", ///... + //bazel/... + //buildscripts/... + //evergreen/... + //jstests/... + //modules_poc/... + //src/... + //tools/...) + kind("py_binary", ///... + //bazel/... + //buildscripts/... + //evergreen/... + //jstests/... + //modules_poc/... + //src/... + //tools/...) + kind("py_library", ///... + //bazel/... + //buildscripts/... + //evergreen/... + //jstests/... + //modules_poc/... + //src/... + //tools/...) + kind("rust_library", ///... + //bazel/... + //buildscripts/... + //evergreen/... + //jstests/... + //modules_poc/... + //src/... + //tools/...)'
+        bazel_targets_query: 'kind("js_library", //bazel/... + //buildscripts/... + //evergreen/... + //jstests/... + //modules_poc/... + //src/... + //tools/...) + kind("py_binary", //bazel/... + //buildscripts/... + //evergreen/... + //jstests/... + //modules_poc/... + //src/... + //tools/...) + kind("py_library", //bazel/... + //buildscripts/... + //evergreen/... + //jstests/... + //modules_poc/... + //src/... + //tools/...) + kind("rust_library", //bazel/... + //buildscripts/... + //evergreen/... + //jstests/... + //modules_poc/... + //src/... + //tools/...)'
         additional_args: "--use-bazel-aspects"
         sarif_file: findings.sarif
     - name: Upload SARIF
