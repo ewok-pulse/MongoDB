@@ -20,7 +20,7 @@ jobs:
       - uses: dorny/paths-filter@v3
         id: filter
         with:
-          filters: |
+          filters: |-
             javascript-typescript:
               - 'buildscripts/eslint-plugin-mongodb/**'
               - 'package.json'
@@ -32,14 +32,11 @@ jobs:
               - 'poetry.lock'
             swift:
               - 'src/third_party/zstandard/zstd/**'
-
   scan-javascript-typescript-pr:
     name: "PR Scan: javascript/typescript"
     needs: detect-changes
     if: github.event_name == 'pull_request' && needs.detect-changes.outputs.javascript-typescript == 'true'
     runs-on: ubuntu-latest
-    env:
-      ENDOR_SCAN_ENABLE_PRECOMPUTED_CALLGRAPHS: "true"
     permissions:
       actions: read
       contents: read
@@ -48,6 +45,14 @@ jobs:
       pull-requests: write
     steps:
       - uses: actions/checkout@v4
+      - &a1
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - &a2
+        run: npm install -g pnpm
+      - &a3
+        run: pnpm install --frozen-lockfile
       - uses: endorlabs/github-action@b8992820cc4d9c9e7ded5022adf6cabe2dc11946
         with:
           namespace: "endor-solutions-ypulse.github-ci"
@@ -57,7 +62,8 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           enable_github_action_token: true
           additional_args: "--include-path=buildscripts/eslint-plugin-mongodb/** --include-path=package.json --include-path=pnpm-lock.yaml --languages=javascript,typescript --exclude-path=jstests/** --quick-scan"
-
+    env:
+      ENDOR_SCAN_ENABLE_PRECOMPUTED_CALLGRAPHS: "true"
   scan-javascript-typescript-monitor:
     name: "Monitor Scan: javascript/typescript"
     if: github.event_name == 'push'
@@ -69,6 +75,9 @@ jobs:
       security-events: write
     steps:
       - uses: actions/checkout@v4
+      - *a1
+      - *a2
+      - *a3
       - uses: endorlabs/github-action@b8992820cc4d9c9e7ded5022adf6cabe2dc11946
         with:
           namespace: "endor-solutions-ypulse.github-ci"
@@ -83,14 +92,11 @@ jobs:
         with:
           sarif_file: findings.sarif
           category: endorlabs-javascript-typescript
-
   scan-python-pr:
     name: "PR Scan: python"
     needs: detect-changes
     if: github.event_name == 'pull_request' && needs.detect-changes.outputs.python == 'true'
     runs-on: ubuntu-latest
-    env:
-      ENDOR_SCAN_ENABLE_PRECOMPUTED_CALLGRAPHS: "true"
     permissions:
       actions: read
       contents: read
@@ -99,6 +105,12 @@ jobs:
       pull-requests: write
     steps:
       - uses: actions/checkout@v4
+      - &a4
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - &a5
+        run: pip install poetry && poetry install --no-interaction
       - uses: endorlabs/github-action@b8992820cc4d9c9e7ded5022adf6cabe2dc11946
         with:
           namespace: "endor-solutions-ypulse.github-ci"
@@ -108,7 +120,8 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           enable_github_action_token: true
           additional_args: "--include-path=buildscripts/cost_model/** --include-path=buildscripts/bazel_rules_mongo/** --include-path=pyproject.toml --include-path=poetry.lock --languages=python --exclude-path=jstests/** --quick-scan"
-
+    env:
+      ENDOR_SCAN_ENABLE_PRECOMPUTED_CALLGRAPHS: "true"
   scan-python-monitor:
     name: "Monitor Scan: python"
     if: github.event_name == 'push'
@@ -120,6 +133,8 @@ jobs:
       security-events: write
     steps:
       - uses: actions/checkout@v4
+      - *a4
+      - *a5
       - uses: endorlabs/github-action@b8992820cc4d9c9e7ded5022adf6cabe2dc11946
         with:
           namespace: "endor-solutions-ypulse.github-ci"
@@ -134,14 +149,11 @@ jobs:
         with:
           sarif_file: findings.sarif
           category: endorlabs-python
-
   scan-swift-pr:
     name: "PR Scan: swift"
     needs: detect-changes
     if: github.event_name == 'pull_request' && needs.detect-changes.outputs.swift == 'true'
     runs-on: ubuntu-latest
-    env:
-      ENDOR_SCAN_ENABLE_PRECOMPUTED_CALLGRAPHS: "true"
     permissions:
       actions: read
       contents: read
@@ -150,6 +162,8 @@ jobs:
       pull-requests: write
     steps:
       - uses: actions/checkout@v4
+      - &a6
+        uses: swift-actions/setup-swift@v2
       - uses: endorlabs/github-action@b8992820cc4d9c9e7ded5022adf6cabe2dc11946
         with:
           namespace: "endor-solutions-ypulse.github-ci"
@@ -159,7 +173,8 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           enable_github_action_token: true
           additional_args: "--include-path=src/third_party/zstandard/zstd/** --languages=swift --exclude-path=jstests/** --quick-scan"
-
+    env:
+      ENDOR_SCAN_ENABLE_PRECOMPUTED_CALLGRAPHS: "true"
   scan-swift-monitor:
     name: "Monitor Scan: swift"
     if: github.event_name == 'push'
@@ -171,6 +186,7 @@ jobs:
       security-events: write
     steps:
       - uses: actions/checkout@v4
+      - *a6
       - uses: endorlabs/github-action@b8992820cc4d9c9e7ded5022adf6cabe2dc11946
         with:
           namespace: "endor-solutions-ypulse.github-ci"
