@@ -5,77 +5,183 @@ on:
   pull_request:
     branches: [ main ]
 jobs:
-  scan:
+  detect-changes:
+    name: Detect changed paths
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    permissions:
+      pull-requests: read
+    outputs:
+      javascript-typescript: ${{ steps.filter.outputs.javascript-typescript }}
+      python: ${{ steps.filter.outputs.python }}
+      swift: ${{ steps.filter.outputs.swift }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            javascript-typescript:
+              - 'buildscripts/eslint-plugin-mongodb/**'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+            python:
+              - 'buildscripts/cost_model/**'
+              - 'buildscripts/bazel_rules_mongo/**'
+              - 'pyproject.toml'
+              - 'poetry.lock'
+            swift:
+              - 'src/third_party/zstandard/zstd/**'
+
+  scan-javascript-typescript-pr:
+    name: "PR Scan: javascript/typescript"
+    needs: detect-changes
+    if: github.event_name == 'pull_request' && needs.detect-changes.outputs.javascript-typescript == 'true'
+    runs-on: ubuntu-latest
+    env:
+      ENDOR_SCAN_ENABLE_PRECOMPUTED_CALLGRAPHS: "true"
+    permissions:
+      actions: read
+      contents: read
+      id-token: write
+      security-events: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: endorlabs/github-action@b8992820cc4d9c9e7ded5022adf6cabe2dc11946
+        with:
+          namespace: "endor-solutions-ypulse.github-ci"
+          scan_dependencies: true
+          pr: true
+          enable_pr_comments: true
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          enable_github_action_token: true
+          additional_args: "--include-path='buildscripts/eslint-plugin-mongodb/**' --include-path='package.json' --include-path='pnpm-lock.yaml' --languages=javascript,typescript --exclude-path='jstests/**' --quick-scan"
+
+  scan-javascript-typescript-monitor:
+    name: "Monitor Scan: javascript/typescript"
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     permissions:
       actions: read
-      security-events: write
       contents: read
       id-token: write
+      security-events: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: endorlabs/github-action@b8992820cc4d9c9e7ded5022adf6cabe2dc11946
+        with:
+          namespace: "endor-solutions-ypulse.github-ci"
+          scan_dependencies: true
+          pr: false
+          enable_github_action_token: true
+          additional_args: "--include-path='buildscripts/eslint-plugin-mongodb/**' --include-path='package.json' --include-path='pnpm-lock.yaml' --languages=javascript,typescript --exclude-path='jstests/**'"
+          sarif_file: findings.sarif
+      - uses: github/codeql-action/upload-sarif@v4
+        if: always()
+        continue-on-error: true
+        with:
+          sarif_file: findings.sarif
+          category: endorlabs-javascript-typescript
+
+  scan-python-pr:
+    name: "PR Scan: python"
+    needs: detect-changes
+    if: github.event_name == 'pull_request' && needs.detect-changes.outputs.python == 'true'
+    runs-on: ubuntu-latest
+    env:
+      ENDOR_SCAN_ENABLE_PRECOMPUTED_CALLGRAPHS: "true"
+    permissions:
+      actions: read
+      contents: read
+      id-token: write
+      security-events: write
       pull-requests: write
     steps:
-    - name: Checkout
-      uses: actions/checkout@v4
-    - name: Set up Bazelisk
-      uses: bazelbuild/setup-bazelisk@v3
-    - name: Disable remote connections for CI scan
-      run: |
-        cat >> .bazelrc.local <<'ENDORLABS_OVERRIDE'
-        common --bes_backend=
-        common --remote_cache=
-        common --remote_executor=
-        common --experimental_remote_downloader=
-        common --noremote_upload_local_results
-        ENDORLABS_OVERRIDE
-    - name: Pre-build Bazel scan targets
-      run: |
-        query_rc=0
-        bazel query --config=local --keep_going 'kind("py_binary", //bazel/... + //buildscripts/... + //evergreen/... + //modules_poc/... + //src/... + //tools/...) + kind("py_library", //bazel/... + //buildscripts/... + //evergreen/... + //modules_poc/... + //src/... + //tools/...) + kind("rust_library", //bazel/... + //buildscripts/... + //evergreen/... + //modules_poc/... + //src/... + //tools/...)' > .endorlabs.bazel.targets 2>.endorlabs.bazel.query.log || query_rc=$?
-        if [ "$query_rc" -ne 0 ] && [ "$query_rc" -ne 3 ]; then
-          cat .endorlabs.bazel.query.log >&2
-          exit "$query_rc"
-        fi
-        if [ ! -s .endorlabs.bazel.targets ]; then
-          cat .endorlabs.bazel.query.log >&2
-          echo "No Bazel targets resolved for the Endor Labs scan" >&2
-          exit 1
-        fi
-        xargs bazel build --config=local --keep_going < .endorlabs.bazel.targets || echo "Warning: some Bazel targets failed to build (e.g. platform-incompatible). The scan will analyze what built successfully." >&2
-    - name: Endor Labs PR Scan
-      if: github.event_name == 'pull_request'
-      uses: endorlabs/github-action@b8992820cc4d9c9e7ded5022adf6cabe2dc11946
-      env:
-        ENDOR_SCAN_ENABLE_PRECOMPUTED_CALLGRAPHS: "true"
-      with:
-        namespace: "endor-solutions-ypulse.github-ci"
-        scan_dependencies: true
-        scan_secrets: false
-        pr: true
-        pr_incremental: true
-        enable_pr_comments: true
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        enable_github_action_token: true
-        use_bazel: true
-        bazel_targets_query: 'kind("py_binary", //bazel/... + //buildscripts/... + //evergreen/... + //modules_poc/... + //src/... + //tools/...) + kind("py_library", //bazel/... + //buildscripts/... + //evergreen/... + //modules_poc/... + //src/... + //tools/...) + kind("rust_library", //bazel/... + //buildscripts/... + //evergreen/... + //modules_poc/... + //src/... + //tools/...)'
-        additional_args: "--quick-scan"
-        scan_summary_output_type: "table"
-        sarif_file: findings.sarif
-    - name: Endor Labs Monitor Scan
-      if: github.event_name == 'push'
-      uses: endorlabs/github-action@b8992820cc4d9c9e7ded5022adf6cabe2dc11946
-      with:
-        namespace: "endor-solutions-ypulse.github-ci"
-        scan_dependencies: true
-        scan_secrets: false
-        pr: false
-        enable_github_action_token: true
-        use_bazel: true
-        bazel_targets_query: 'kind("py_binary", //bazel/... + //buildscripts/... + //evergreen/... + //modules_poc/... + //src/... + //tools/...) + kind("py_library", //bazel/... + //buildscripts/... + //evergreen/... + //modules_poc/... + //src/... + //tools/...) + kind("rust_library", //bazel/... + //buildscripts/... + //evergreen/... + //modules_poc/... + //src/... + //tools/...)'
-        additional_args: "--use-bazel-aspects"
-        sarif_file: findings.sarif
-    - name: Upload SARIF
-      if: always()
-      uses: github/codeql-action/upload-sarif@v4
-      continue-on-error: true
-      with:
-        sarif_file: findings.sarif
+      - uses: actions/checkout@v4
+      - uses: endorlabs/github-action@b8992820cc4d9c9e7ded5022adf6cabe2dc11946
+        with:
+          namespace: "endor-solutions-ypulse.github-ci"
+          scan_dependencies: true
+          pr: true
+          enable_pr_comments: true
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          enable_github_action_token: true
+          additional_args: "--include-path='buildscripts/cost_model/**' --include-path='buildscripts/bazel_rules_mongo/**' --include-path='pyproject.toml' --include-path='poetry.lock' --languages=python --exclude-path='jstests/**' --quick-scan"
+
+  scan-python-monitor:
+    name: "Monitor Scan: python"
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      id-token: write
+      security-events: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: endorlabs/github-action@b8992820cc4d9c9e7ded5022adf6cabe2dc11946
+        with:
+          namespace: "endor-solutions-ypulse.github-ci"
+          scan_dependencies: true
+          pr: false
+          enable_github_action_token: true
+          additional_args: "--include-path='buildscripts/cost_model/**' --include-path='buildscripts/bazel_rules_mongo/**' --include-path='pyproject.toml' --include-path='poetry.lock' --languages=python --exclude-path='jstests/**'"
+          sarif_file: findings.sarif
+      - uses: github/codeql-action/upload-sarif@v4
+        if: always()
+        continue-on-error: true
+        with:
+          sarif_file: findings.sarif
+          category: endorlabs-python
+
+  scan-swift-pr:
+    name: "PR Scan: swift"
+    needs: detect-changes
+    if: github.event_name == 'pull_request' && needs.detect-changes.outputs.swift == 'true'
+    runs-on: ubuntu-latest
+    env:
+      ENDOR_SCAN_ENABLE_PRECOMPUTED_CALLGRAPHS: "true"
+    permissions:
+      actions: read
+      contents: read
+      id-token: write
+      security-events: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: endorlabs/github-action@b8992820cc4d9c9e7ded5022adf6cabe2dc11946
+        with:
+          namespace: "endor-solutions-ypulse.github-ci"
+          scan_dependencies: true
+          pr: true
+          enable_pr_comments: true
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          enable_github_action_token: true
+          additional_args: "--include-path='src/third_party/zstandard/zstd/**' --languages=swift --exclude-path='jstests/**' --quick-scan"
+
+  scan-swift-monitor:
+    name: "Monitor Scan: swift"
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      id-token: write
+      security-events: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: endorlabs/github-action@b8992820cc4d9c9e7ded5022adf6cabe2dc11946
+        with:
+          namespace: "endor-solutions-ypulse.github-ci"
+          scan_dependencies: true
+          pr: false
+          enable_github_action_token: true
+          additional_args: "--include-path='src/third_party/zstandard/zstd/**' --languages=swift --exclude-path='jstests/**'"
+          sarif_file: findings.sarif
+      - uses: github/codeql-action/upload-sarif@v4
+        if: always()
+        continue-on-error: true
+        with:
+          sarif_file: findings.sarif
+          category: endorlabs-swift
