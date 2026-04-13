@@ -56,7 +56,7 @@ jobs:
           enable_pr_comments: true
           github_token: ${{ secrets.GITHUB_TOKEN }}
           enable_github_action_token: true
-          additional_args: "--include-path='buildscripts/eslint-plugin-mongodb/**' --include-path='package.json' --include-path='pnpm-lock.yaml' --languages=javascript,typescript --exclude-path='jstests/**' --quick-scan"
+          additional_args: "--include-path=buildscripts/eslint-plugin-mongodb/** --include-path=package.json --include-path=pnpm-lock.yaml --languages=javascript,typescript --exclude-path=jstests/** --quick-scan"
 
   scan-javascript-typescript-monitor:
     name: "Monitor Scan: javascript/typescript"
@@ -75,7 +75,7 @@ jobs:
           scan_dependencies: true
           pr: false
           enable_github_action_token: true
-          additional_args: "--include-path='buildscripts/eslint-plugin-mongodb/**' --include-path='package.json' --include-path='pnpm-lock.yaml' --languages=javascript,typescript --exclude-path='jstests/**'"
+          additional_args: "--include-path=buildscripts/eslint-plugin-mongodb/** --include-path=package.json --include-path=pnpm-lock.yaml --languages=javascript,typescript --exclude-path=jstests/**"
           sarif_file: findings.sarif
       - uses: github/codeql-action/upload-sarif@v4
         if: always()
@@ -107,7 +107,7 @@ jobs:
           enable_pr_comments: true
           github_token: ${{ secrets.GITHUB_TOKEN }}
           enable_github_action_token: true
-          additional_args: "--include-path='buildscripts/cost_model/**' --include-path='buildscripts/bazel_rules_mongo/**' --include-path='pyproject.toml' --include-path='poetry.lock' --languages=python --exclude-path='jstests/**' --quick-scan"
+          additional_args: "--include-path=buildscripts/cost_model/** --include-path=buildscripts/bazel_rules_mongo/** --include-path=pyproject.toml --include-path=poetry.lock --languages=python --exclude-path=jstests/** --quick-scan"
 
   scan-python-monitor:
     name: "Monitor Scan: python"
@@ -126,7 +126,7 @@ jobs:
           scan_dependencies: true
           pr: false
           enable_github_action_token: true
-          additional_args: "--include-path='buildscripts/cost_model/**' --include-path='buildscripts/bazel_rules_mongo/**' --include-path='pyproject.toml' --include-path='poetry.lock' --languages=python --exclude-path='jstests/**'"
+          additional_args: "--include-path=buildscripts/cost_model/** --include-path=buildscripts/bazel_rules_mongo/** --include-path=pyproject.toml --include-path=poetry.lock --languages=python --exclude-path=jstests/**"
           sarif_file: findings.sarif
       - uses: github/codeql-action/upload-sarif@v4
         if: always()
@@ -158,7 +158,7 @@ jobs:
           enable_pr_comments: true
           github_token: ${{ secrets.GITHUB_TOKEN }}
           enable_github_action_token: true
-          additional_args: "--include-path='src/third_party/zstandard/zstd/**' --languages=swift --exclude-path='jstests/**' --quick-scan"
+          additional_args: "--include-path=src/third_party/zstandard/zstd/** --languages=swift --exclude-path=jstests/** --quick-scan"
 
   scan-swift-monitor:
     name: "Monitor Scan: swift"
@@ -177,7 +177,7 @@ jobs:
           scan_dependencies: true
           pr: false
           enable_github_action_token: true
-          additional_args: "--include-path='src/third_party/zstandard/zstd/**' --languages=swift --exclude-path='jstests/**'"
+          additional_args: "--include-path=src/third_party/zstandard/zstd/** --languages=swift --exclude-path=jstests/**"
           sarif_file: findings.sarif
       - uses: github/codeql-action/upload-sarif@v4
         if: always()
