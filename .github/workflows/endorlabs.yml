@@ -108,7 +108,7 @@ jobs:
       - &a4
         uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
+          python-version: "3.13"
       - &a5
         run: pip install poetry && poetry install --no-interaction
       - uses: endorlabs/github-action@b8992820cc4d9c9e7ded5022adf6cabe2dc11946
