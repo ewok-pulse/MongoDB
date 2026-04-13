@@ -50,7 +50,7 @@ jobs:
         with:
           node-version: "20"
       - &a2
-        run: npm install -g pnpm
+        run: npm install -g pnpm@8
       - &a3
         run: pnpm install --frozen-lockfile
       - uses: endorlabs/github-action@b8992820cc4d9c9e7ded5022adf6cabe2dc11946
