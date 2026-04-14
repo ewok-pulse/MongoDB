@@ -22,16 +22,23 @@ jobs:
         with:
           filters: |-
             javascript-typescript:
-              - 'buildscripts/eslint-plugin-mongodb/**'
-              - 'package.json'
-              - 'pnpm-lock.yaml'
+              - '**/package.json'
+              - '**/package-lock.json'
+              - '**/yarn.lock'
+              - '**/pnpm-lock.yaml'
+              - '**/*.js'
+              - '**/*.ts'
+              - '**/*.tsx'
             python:
-              - 'buildscripts/cost_model/**'
-              - 'buildscripts/bazel_rules_mongo/**'
-              - 'pyproject.toml'
-              - 'poetry.lock'
+              - '**/requirements.txt'
+              - '**/pyproject.toml'
+              - '**/poetry.lock'
+              - '**/setup.py'
+              - '**/Pipfile'
+              - '**/*.py'
             swift:
-              - 'src/third_party/zstandard/zstd/**'
+              - '**/Package.swift'
+              - '**/*.swift'
   scan-javascript-typescript-pr:
     name: "PR Scan: javascript/typescript"
     needs: detect-changes
@@ -61,7 +68,7 @@ jobs:
           enable_pr_comments: true
           github_token: ${{ secrets.GITHUB_TOKEN }}
           enable_github_action_token: true
-          additional_args: "--include-path=buildscripts/eslint-plugin-mongodb/** --include-path=package.json --include-path=pnpm-lock.yaml --languages=javascript,typescript --exclude-path=jstests/** --quick-scan"
+          additional_args: "--languages=javascript,typescript --exclude-path=jstests/** --quick-scan"
     env:
       ENDOR_SCAN_ENABLE_PRECOMPUTED_CALLGRAPHS: "true"
   scan-javascript-typescript-monitor:
@@ -84,7 +91,7 @@ jobs:
           scan_dependencies: true
           pr: false
           enable_github_action_token: true
-          additional_args: "--include-path=buildscripts/eslint-plugin-mongodb/** --include-path=package.json --include-path=pnpm-lock.yaml --languages=javascript,typescript --exclude-path=jstests/**"
+          additional_args: "--languages=javascript,typescript --exclude-path=jstests/**"
           sarif_file: findings.sarif
       - uses: github/codeql-action/upload-sarif@v4
         if: always()
@@ -121,7 +128,7 @@ jobs:
           enable_pr_comments: true
           github_token: ${{ secrets.GITHUB_TOKEN }}
           enable_github_action_token: true
-          additional_args: "--include-path=buildscripts/cost_model/** --include-path=buildscripts/bazel_rules_mongo/** --include-path=pyproject.toml --include-path=poetry.lock --languages=python --exclude-path=jstests/** --quick-scan"
+          additional_args: "--languages=python --exclude-path=jstests/** --quick-scan"
     env:
       ENDOR_SCAN_ENABLE_PRECOMPUTED_CALLGRAPHS: "true"
   scan-python-monitor:
@@ -144,7 +151,7 @@ jobs:
           scan_dependencies: true
           pr: false
           enable_github_action_token: true
-          additional_args: "--include-path=buildscripts/cost_model/** --include-path=buildscripts/bazel_rules_mongo/** --include-path=pyproject.toml --include-path=poetry.lock --languages=python --exclude-path=jstests/**"
+          additional_args: "--languages=python --exclude-path=jstests/**"
           sarif_file: findings.sarif
       - uses: github/codeql-action/upload-sarif@v4
         if: always()
@@ -175,7 +182,7 @@ jobs:
           enable_pr_comments: true
           github_token: ${{ secrets.GITHUB_TOKEN }}
           enable_github_action_token: true
-          additional_args: "--include-path=src/third_party/zstandard/zstd/** --languages=swift --exclude-path=jstests/** --quick-scan"
+          additional_args: "--languages=swift --exclude-path=jstests/** --quick-scan"
     env:
       ENDOR_SCAN_ENABLE_PRECOMPUTED_CALLGRAPHS: "true"
   scan-swift-monitor:
@@ -196,7 +203,7 @@ jobs:
           scan_dependencies: true
           pr: false
           enable_github_action_token: true
-          additional_args: "--include-path=src/third_party/zstandard/zstd/** --languages=swift --exclude-path=jstests/**"
+          additional_args: "--languages=swift --exclude-path=jstests/**"
           sarif_file: findings.sarif
       - uses: github/codeql-action/upload-sarif@v4
         if: always()
