@@ -117,8 +117,10 @@ jobs:
         with:
           python-version: "3.13"
       - &a5
-        run: pip install poetry && poetry install --no-interaction --no-root
+        run: pip install setuptools
       - &a6
+        run: poetry config virtualenvs.in-project true && pip install poetry && poetry install --no-interaction --no-root
+      - &a7
         uses: astral-sh/setup-uv@v5
       - uses: endorlabs/github-action@b8992820cc4d9c9e7ded5022adf6cabe2dc11946
         with:
@@ -145,6 +147,7 @@ jobs:
       - *a4
       - *a5
       - *a6
+      - *a7
       - uses: endorlabs/github-action@b8992820cc4d9c9e7ded5022adf6cabe2dc11946
         with:
           namespace: "endor-solutions-ypulse.github-ci"
@@ -172,7 +175,7 @@ jobs:
       pull-requests: write
     steps:
       - uses: actions/checkout@v4
-      - &a7
+      - &a8
         uses: swift-actions/setup-swift@v2
       - uses: endorlabs/github-action@b8992820cc4d9c9e7ded5022adf6cabe2dc11946
         with:
@@ -196,7 +199,7 @@ jobs:
       security-events: write
     steps:
       - uses: actions/checkout@v4
-      - *a7
+      - *a8
       - uses: endorlabs/github-action@b8992820cc4d9c9e7ded5022adf6cabe2dc11946
         with:
           namespace: "endor-solutions-ypulse.github-ci"
