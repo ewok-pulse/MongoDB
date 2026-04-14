@@ -110,7 +110,7 @@ jobs:
         with:
           python-version: "3.13"
       - &a5
-        run: pip install poetry && poetry install --no-interaction
+        run: pip install poetry && poetry install --no-interaction --no-root
       - uses: endorlabs/github-action@b8992820cc4d9c9e7ded5022adf6cabe2dc11946
         with:
           namespace: "endor-solutions-ypulse.github-ci"
