@@ -16,7 +16,6 @@ jobs:
     outputs:
       javascript-typescript: ${{ steps.filter.outputs.javascript-typescript }}
       python: ${{ steps.filter.outputs.python }}
-      c-net: ${{ steps.filter.outputs.c-net }}
       rust: ${{ steps.filter.outputs.rust }}
       ruby: ${{ steps.filter.outputs.ruby }}
       php: ${{ steps.filter.outputs.php }}
@@ -45,11 +44,6 @@ jobs:
               - '**/Pipfile'
               - '**/uv.lock'
               - '**/*.py'
-            c-net:
-              - '**/*.csproj'
-              - '**/*.sln'
-              - '**/packages.lock.json'
-              - '**/*.cs'
             rust:
               - '**/Cargo.toml'
               - '**/Cargo.lock'
@@ -205,61 +199,6 @@ jobs:
         with:
           sarif_file: findings.sarif
           category: endorlabs-python
-  scan-c-net-pr:
-    name: "PR Scan: c#/.net"
-    needs: detect-changes
-    if: github.event_name == 'pull_request' && needs.detect-changes.outputs.c-net == 'true'
-    runs-on: ubuntu-latest
-    permissions:
-      actions: read
-      contents: read
-      id-token: write
-      security-events: write
-      pull-requests: write
-    steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-dotnet@v5
-        with:
-          dotnet-version: 8.0.x
-      - uses: endorlabs/github-action@b8992820cc4d9c9e7ded5022adf6cabe2dc11946
-        with:
-          namespace: "endor-solutions-ypulse.github-ci"
-          scan_dependencies: true
-          pr: true
-          enable_pr_comments: true
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          enable_github_action_token: true
-          additional_args: "--languages=c# --quick-scan"
-    env:
-      ENDOR_SCAN_ENABLE_PRECOMPUTED_CALLGRAPHS: "true"
-  scan-c-net-monitor:
-    name: "Monitor Scan: c#/.net"
-    if: github.event_name == 'push'
-    runs-on: ubuntu-latest
-    permissions:
-      actions: read
-      contents: read
-      id-token: write
-      security-events: write
-    steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-dotnet@v5
-        with:
-          dotnet-version: 8.0.x
-      - uses: endorlabs/github-action@b8992820cc4d9c9e7ded5022adf6cabe2dc11946
-        with:
-          namespace: "endor-solutions-ypulse.github-ci"
-          scan_dependencies: true
-          pr: false
-          enable_github_action_token: true
-          additional_args: "--languages=c#"
-          sarif_file: findings.sarif
-      - uses: github/codeql-action/upload-sarif@v4
-        if: always()
-        continue-on-error: true
-        with:
-          sarif_file: findings.sarif
-          category: endorlabs-c-net
   scan-rust-pr:
     name: "PR Scan: rust"
     needs: detect-changes
@@ -282,7 +221,7 @@ jobs:
           enable_pr_comments: true
           github_token: ${{ secrets.GITHUB_TOKEN }}
           enable_github_action_token: true
-          additional_args: "--languages=rust --exclude-path=src/third_party/mozjs/extract/js/src/fuzz-tests/** --quick-scan"
+          additional_args: "--languages=rust --quick-scan"
     env:
       ENDOR_SCAN_ENABLE_PRECOMPUTED_CALLGRAPHS: "true"
   scan-rust-monitor:
@@ -303,7 +242,7 @@ jobs:
           scan_dependencies: true
           pr: false
           enable_github_action_token: true
-          additional_args: "--languages=rust --exclude-path=src/third_party/mozjs/extract/js/src/fuzz-tests/**"
+          additional_args: "--languages=rust"
           sarif_file: findings.sarif
       - uses: github/codeql-action/upload-sarif@v4
         if: always()
