@@ -57,9 +57,9 @@ jobs:
         with:
           node-version: "20"
       - &a2
-        run: npm install -g pnpm@8
+        run: npm install -g pnpm@8 # pinned from pnpm-lock.yaml lockfileVersion
       - &a3
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --frozen-lockfile # pinned from pnpm-lock.yaml lockfileVersion
       - uses: endorlabs/github-action@b8992820cc4d9c9e7ded5022adf6cabe2dc11946
         with:
           namespace: "endor-solutions-ypulse.github-ci"
@@ -115,12 +115,20 @@ jobs:
       - &a4
         uses: actions/setup-python@v5
         with:
-          python-version: "3.13"
+          python-version: "3.13" # detected from pyproject.toml requires-python
       - &a5
-        run: pip install setuptools
+        run: pip install setuptools # pinned from pnpm-lock.yaml lockfileVersion
       - &a6
-        run: pip install poetry && poetry config virtualenvs.in-project true && poetry install --no-interaction --no-root
+        run: pip install poetry && poetry config virtualenvs.in-project true && poetry install --no-interaction --no-root # pinned from pnpm-lock.yaml lockfileVersion
       - &a7
+        name: "Install subdirectory deps: buildscripts/cost_model"
+        run: pip install -r buildscripts/cost_model/requirements.txt # pinned from pnpm-lock.yaml lockfileVersion
+        continue-on-error: true
+      - &a8
+        name: "Install subdirectory package: buildscripts/bazel_rules_mongo"
+        run: pip install ./buildscripts/bazel_rules_mongo # pinned from pnpm-lock.yaml lockfileVersion
+        continue-on-error: true
+      - &a9
         uses: astral-sh/setup-uv@v5
       - uses: endorlabs/github-action@b8992820cc4d9c9e7ded5022adf6cabe2dc11946
         with:
@@ -148,6 +156,8 @@ jobs:
       - *a5
       - *a6
       - *a7
+      - *a8
+      - *a9
       - uses: endorlabs/github-action@b8992820cc4d9c9e7ded5022adf6cabe2dc11946
         with:
           namespace: "endor-solutions-ypulse.github-ci"
@@ -175,7 +185,7 @@ jobs:
       pull-requests: write
     steps:
       - uses: actions/checkout@v4
-      - &a8
+      - &a10
         uses: swift-actions/setup-swift@v2
       - uses: endorlabs/github-action@b8992820cc4d9c9e7ded5022adf6cabe2dc11946
         with:
@@ -199,7 +209,7 @@ jobs:
       security-events: write
     steps:
       - uses: actions/checkout@v4
-      - *a8
+      - *a10
       - uses: endorlabs/github-action@b8992820cc4d9c9e7ded5022adf6cabe2dc11946
         with:
           namespace: "endor-solutions-ypulse.github-ci"
