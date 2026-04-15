@@ -267,7 +267,6 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 8.0.x
-      - run: dotnet restore
       - uses: endorlabs/github-action@b8992820cc4d9c9e7ded5022adf6cabe2dc11946
         with:
           namespace: "endor-solutions-ypulse.github-ci"
@@ -276,7 +275,7 @@ jobs:
           enable_pr_comments: true
           github_token: ${{ secrets.GITHUB_TOKEN }}
           enable_github_action_token: true
-          additional_args: "--languages=c#,.net --quick-scan"
+          additional_args: "--languages=c# --quick-scan"
     env:
       ENDOR_SCAN_ENABLE_PRECOMPUTED_CALLGRAPHS: "true"
   scan-c-net-monitor:
@@ -293,14 +292,13 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 8.0.x
-      - run: dotnet restore
       - uses: endorlabs/github-action@b8992820cc4d9c9e7ded5022adf6cabe2dc11946
         with:
           namespace: "endor-solutions-ypulse.github-ci"
           scan_dependencies: true
           pr: false
           enable_github_action_token: true
-          additional_args: "--languages=c#,.net"
+          additional_args: "--languages=c#"
           sarif_file: findings.sarif
       - uses: github/codeql-action/upload-sarif@v4
         if: always()
@@ -433,7 +431,6 @@ jobs:
         with:
           php-version: "8.2"
           tools: composer
-      - run: composer install --no-dev
       - uses: endorlabs/github-action@b8992820cc4d9c9e7ded5022adf6cabe2dc11946
         with:
           namespace: "endor-solutions-ypulse.github-ci"
@@ -460,7 +457,6 @@ jobs:
         with:
           php-version: "8.2"
           tools: composer
-      - run: composer install --no-dev
       - uses: endorlabs/github-action@b8992820cc4d9c9e7ded5022adf6cabe2dc11946
         with:
           namespace: "endor-solutions-ypulse.github-ci"
