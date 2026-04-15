@@ -1,9 +1,9 @@
 name: Endor Labs Scan
 on:
   push:
-    branches: [ main ]
+    branches: [ master ]
   pull_request:
-    branches: [ main ]
+    branches: [ master ]
 jobs:
   detect-changes:
     name: Detect changed paths
@@ -17,7 +17,7 @@ jobs:
       swift: ${{ steps.filter.outputs.swift }}
     steps:
       - uses: actions/checkout@v4
-      - uses: dorny/paths-filter@v3
+      - uses: dorny/paths-filter@v4
         id: filter
         with:
           filters: |-
@@ -52,14 +52,11 @@ jobs:
       pull-requests: write
     steps:
       - uses: actions/checkout@v4
-      - &a1
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: "20"
-      - &a2
-        run: npm install -g pnpm@8 # pinned from pnpm-lock.yaml lockfileVersion
-      - &a3
-        run: pnpm install --frozen-lockfile # pinned from pnpm-lock.yaml lockfileVersion
+      - run: npm install -g pnpm@8 # pinned from pnpm-lock.yaml lockfileVersion
+      - run: pnpm install --frozen-lockfile
       - uses: endorlabs/github-action@b8992820cc4d9c9e7ded5022adf6cabe2dc11946
         with:
           namespace: "endor-solutions-ypulse.github-ci"
@@ -68,7 +65,7 @@ jobs:
           enable_pr_comments: true
           github_token: ${{ secrets.GITHUB_TOKEN }}
           enable_github_action_token: true
-          additional_args: "--languages=javascript,typescript --exclude-path=jstests/** --quick-scan"
+          additional_args: "--languages=javascript,typescript --quick-scan"
     env:
       ENDOR_SCAN_ENABLE_PRECOMPUTED_CALLGRAPHS: "true"
   scan-javascript-typescript-monitor:
@@ -82,16 +79,18 @@ jobs:
       security-events: write
     steps:
       - uses: actions/checkout@v4
-      - *a1
-      - *a2
-      - *a3
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - run: npm install -g pnpm@8 # pinned from pnpm-lock.yaml lockfileVersion
+      - run: pnpm install --frozen-lockfile
       - uses: endorlabs/github-action@b8992820cc4d9c9e7ded5022adf6cabe2dc11946
         with:
           namespace: "endor-solutions-ypulse.github-ci"
           scan_dependencies: true
           pr: false
           enable_github_action_token: true
-          additional_args: "--languages=javascript,typescript --exclude-path=jstests/**"
+          additional_args: "--languages=javascript,typescript"
           sarif_file: findings.sarif
       - uses: github/codeql-action/upload-sarif@v4
         if: always()
@@ -112,24 +111,18 @@ jobs:
       pull-requests: write
     steps:
       - uses: actions/checkout@v4
-      - &a4
-        uses: actions/setup-python@v5
+      - uses: actions/setup-python@v5
         with:
           python-version: "3.13" # detected from pyproject.toml requires-python
-      - &a5
-        run: pip install setuptools # pinned from pnpm-lock.yaml lockfileVersion
-      - &a6
-        run: pip install poetry && poetry config virtualenvs.in-project true && poetry install --no-interaction --no-root # pinned from pnpm-lock.yaml lockfileVersion
-      - &a7
-        name: "Install subdirectory deps: buildscripts/cost_model"
-        run: pip install -r buildscripts/cost_model/requirements.txt # pinned from pnpm-lock.yaml lockfileVersion
+      - run: pip install setuptools
+      - run: pip install poetry && poetry config virtualenvs.in-project true && poetry install --no-interaction --no-root
+      - name: "Install subdirectory deps: buildscripts/cost_model"
+        run: pip install -r buildscripts/cost_model/requirements.txt
         continue-on-error: true
-      - &a8
-        name: "Install subdirectory package: buildscripts/bazel_rules_mongo"
-        run: pip install ./buildscripts/bazel_rules_mongo # pinned from pnpm-lock.yaml lockfileVersion
+      - name: "Install subdirectory package: buildscripts/bazel_rules_mongo"
+        run: pip install ./buildscripts/bazel_rules_mongo
         continue-on-error: true
-      - &a9
-        uses: astral-sh/setup-uv@v5
+      - uses: astral-sh/setup-uv@v5
       - uses: endorlabs/github-action@b8992820cc4d9c9e7ded5022adf6cabe2dc11946
         with:
           namespace: "endor-solutions-ypulse.github-ci"
@@ -138,7 +131,7 @@ jobs:
           enable_pr_comments: true
           github_token: ${{ secrets.GITHUB_TOKEN }}
           enable_github_action_token: true
-          additional_args: "--languages=python --exclude-path=jstests/** --quick-scan"
+          additional_args: "--languages=python --quick-scan"
     env:
       ENDOR_SCAN_ENABLE_PRECOMPUTED_CALLGRAPHS: "true"
   scan-python-monitor:
@@ -152,19 +145,25 @@ jobs:
       security-events: write
     steps:
       - uses: actions/checkout@v4
-      - *a4
-      - *a5
-      - *a6
-      - *a7
-      - *a8
-      - *a9
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13" # detected from pyproject.toml requires-python
+      - run: pip install setuptools
+      - run: pip install poetry && poetry config virtualenvs.in-project true && poetry install --no-interaction --no-root
+      - name: "Install subdirectory deps: buildscripts/cost_model"
+        run: pip install -r buildscripts/cost_model/requirements.txt
+        continue-on-error: true
+      - name: "Install subdirectory package: buildscripts/bazel_rules_mongo"
+        run: pip install ./buildscripts/bazel_rules_mongo
+        continue-on-error: true
+      - uses: astral-sh/setup-uv@v5
       - uses: endorlabs/github-action@b8992820cc4d9c9e7ded5022adf6cabe2dc11946
         with:
           namespace: "endor-solutions-ypulse.github-ci"
           scan_dependencies: true
           pr: false
           enable_github_action_token: true
-          additional_args: "--languages=python --exclude-path=jstests/**"
+          additional_args: "--languages=python"
           sarif_file: findings.sarif
       - uses: github/codeql-action/upload-sarif@v4
         if: always()
@@ -185,8 +184,7 @@ jobs:
       pull-requests: write
     steps:
       - uses: actions/checkout@v4
-      - &a10
-        uses: swift-actions/setup-swift@v2
+      - uses: swift-actions/setup-swift@v2
       - uses: endorlabs/github-action@b8992820cc4d9c9e7ded5022adf6cabe2dc11946
         with:
           namespace: "endor-solutions-ypulse.github-ci"
@@ -195,7 +193,7 @@ jobs:
           enable_pr_comments: true
           github_token: ${{ secrets.GITHUB_TOKEN }}
           enable_github_action_token: true
-          additional_args: "--languages=swift --exclude-path=jstests/** --quick-scan"
+          additional_args: "--languages=swift --quick-scan"
     env:
       ENDOR_SCAN_ENABLE_PRECOMPUTED_CALLGRAPHS: "true"
   scan-swift-monitor:
@@ -209,14 +207,14 @@ jobs:
       security-events: write
     steps:
       - uses: actions/checkout@v4
-      - *a10
+      - uses: swift-actions/setup-swift@v2
       - uses: endorlabs/github-action@b8992820cc4d9c9e7ded5022adf6cabe2dc11946
         with:
           namespace: "endor-solutions-ypulse.github-ci"
           scan_dependencies: true
           pr: false
           enable_github_action_token: true
-          additional_args: "--languages=swift --exclude-path=jstests/**"
+          additional_args: "--languages=swift"
           sarif_file: findings.sarif
       - uses: github/codeql-action/upload-sarif@v4
         if: always()
