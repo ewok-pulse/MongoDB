@@ -14,6 +14,10 @@ jobs:
     outputs:
       javascript-typescript: ${{ steps.filter.outputs.javascript-typescript }}
       python: ${{ steps.filter.outputs.python }}
+      c-net: ${{ steps.filter.outputs.c-net }}
+      rust: ${{ steps.filter.outputs.rust }}
+      ruby: ${{ steps.filter.outputs.ruby }}
+      php: ${{ steps.filter.outputs.php }}
       swift: ${{ steps.filter.outputs.swift }}
     steps:
       - uses: actions/checkout@v4
@@ -26,6 +30,7 @@ jobs:
               - '**/package-lock.json'
               - '**/yarn.lock'
               - '**/pnpm-lock.yaml'
+              - '**/rush.json'
               - '**/*.js'
               - '**/*.ts'
               - '**/*.tsx'
@@ -34,10 +39,31 @@ jobs:
               - '**/pyproject.toml'
               - '**/poetry.lock'
               - '**/setup.py'
+              - '**/setup.cfg'
               - '**/Pipfile'
+              - '**/uv.lock'
               - '**/*.py'
+            c-net:
+              - '**/*.csproj'
+              - '**/*.sln'
+              - '**/packages.lock.json'
+              - '**/*.cs'
+            rust:
+              - '**/Cargo.toml'
+              - '**/Cargo.lock'
+              - '**/*.rs'
+            ruby:
+              - '**/Gemfile'
+              - '**/Gemfile.lock'
+              - '**/*.gemspec'
+              - '**/*.rb'
+            php:
+              - '**/composer.json'
+              - '**/composer.lock'
+              - '**/*.php'
             swift:
               - '**/Package.swift'
+              - '**/Podfile'
               - '**/*.swift'
   scan-javascript-typescript-pr:
     name: "PR Scan: javascript/typescript"
@@ -119,8 +145,35 @@ jobs:
       - name: "Install subdirectory deps: buildscripts/cost_model"
         run: pip install -r buildscripts/cost_model/requirements.txt
         continue-on-error: true
+      - name: "Install subdirectory deps: src/mongo/db/query/benchmark/data_generator"
+        run: pip install -r src/mongo/db/query/benchmark/data_generator/requirements.txt
+        continue-on-error: true
+      - name: "Install subdirectory deps: src/third_party/grpc/dist"
+        run: pip install -r src/third_party/grpc/dist/requirements.txt
+        continue-on-error: true
+      - name: "Install subdirectory deps: src/third_party/wiredtiger/test/3rdparty/testtools-2.7.1"
+        run: pip install -r src/third_party/wiredtiger/test/3rdparty/testtools-2.7.1/requirements.txt
+        continue-on-error: true
+      - name: "Install subdirectory deps: src/third_party/wiredtiger/tools/modularity_check"
+        run: pip install -r src/third_party/wiredtiger/tools/modularity_check/requirements.txt
+        continue-on-error: true
+      - name: "Install subdirectory deps: src/third_party/wiredtiger/tools/wt_verify"
+        run: pip install -r src/third_party/wiredtiger/tools/wt_verify/requirements.txt
+        continue-on-error: true
       - name: "Install subdirectory package: buildscripts/bazel_rules_mongo"
         run: pip install ./buildscripts/bazel_rules_mongo
+        continue-on-error: true
+      - name: "Install subdirectory package: src/third_party/wiredtiger/test/3rdparty/iso8601-2.1.0"
+        run: pip install ./src/third_party/wiredtiger/test/3rdparty/iso8601-2.1.0
+        continue-on-error: true
+      - name: "Install subdirectory package: src/third_party/wiredtiger/test/3rdparty/python-subunit-1.4.4"
+        run: pip install ./src/third_party/wiredtiger/test/3rdparty/python-subunit-1.4.4
+        continue-on-error: true
+      - name: "Install subdirectory package: src/third_party/wiredtiger/test/3rdparty/testtools-2.7.1"
+        run: pip install ./src/third_party/wiredtiger/test/3rdparty/testtools-2.7.1
+        continue-on-error: true
+      - name: "Install subdirectory package: src/third_party/wiredtiger/tools/wt-mcp"
+        run: pip install ./src/third_party/wiredtiger/tools/wt-mcp
         continue-on-error: true
       - uses: astral-sh/setup-uv@v5
       - uses: endorlabs/github-action@b8992820cc4d9c9e7ded5022adf6cabe2dc11946
@@ -131,7 +184,7 @@ jobs:
           enable_pr_comments: true
           github_token: ${{ secrets.GITHUB_TOKEN }}
           enable_github_action_token: true
-          additional_args: "--languages=python --quick-scan"
+          additional_args: "--languages=python --exclude-path=src/third_party/wiredtiger/test/** --quick-scan"
     env:
       ENDOR_SCAN_ENABLE_PRECOMPUTED_CALLGRAPHS: "true"
   scan-python-monitor:
@@ -153,8 +206,35 @@ jobs:
       - name: "Install subdirectory deps: buildscripts/cost_model"
         run: pip install -r buildscripts/cost_model/requirements.txt
         continue-on-error: true
+      - name: "Install subdirectory deps: src/mongo/db/query/benchmark/data_generator"
+        run: pip install -r src/mongo/db/query/benchmark/data_generator/requirements.txt
+        continue-on-error: true
+      - name: "Install subdirectory deps: src/third_party/grpc/dist"
+        run: pip install -r src/third_party/grpc/dist/requirements.txt
+        continue-on-error: true
+      - name: "Install subdirectory deps: src/third_party/wiredtiger/test/3rdparty/testtools-2.7.1"
+        run: pip install -r src/third_party/wiredtiger/test/3rdparty/testtools-2.7.1/requirements.txt
+        continue-on-error: true
+      - name: "Install subdirectory deps: src/third_party/wiredtiger/tools/modularity_check"
+        run: pip install -r src/third_party/wiredtiger/tools/modularity_check/requirements.txt
+        continue-on-error: true
+      - name: "Install subdirectory deps: src/third_party/wiredtiger/tools/wt_verify"
+        run: pip install -r src/third_party/wiredtiger/tools/wt_verify/requirements.txt
+        continue-on-error: true
       - name: "Install subdirectory package: buildscripts/bazel_rules_mongo"
         run: pip install ./buildscripts/bazel_rules_mongo
+        continue-on-error: true
+      - name: "Install subdirectory package: src/third_party/wiredtiger/test/3rdparty/iso8601-2.1.0"
+        run: pip install ./src/third_party/wiredtiger/test/3rdparty/iso8601-2.1.0
+        continue-on-error: true
+      - name: "Install subdirectory package: src/third_party/wiredtiger/test/3rdparty/python-subunit-1.4.4"
+        run: pip install ./src/third_party/wiredtiger/test/3rdparty/python-subunit-1.4.4
+        continue-on-error: true
+      - name: "Install subdirectory package: src/third_party/wiredtiger/test/3rdparty/testtools-2.7.1"
+        run: pip install ./src/third_party/wiredtiger/test/3rdparty/testtools-2.7.1
+        continue-on-error: true
+      - name: "Install subdirectory package: src/third_party/wiredtiger/tools/wt-mcp"
+        run: pip install ./src/third_party/wiredtiger/tools/wt-mcp
         continue-on-error: true
       - uses: astral-sh/setup-uv@v5
       - uses: endorlabs/github-action@b8992820cc4d9c9e7ded5022adf6cabe2dc11946
@@ -163,7 +243,7 @@ jobs:
           scan_dependencies: true
           pr: false
           enable_github_action_token: true
-          additional_args: "--languages=python"
+          additional_args: "--languages=python --exclude-path=src/third_party/wiredtiger/test/**"
           sarif_file: findings.sarif
       - uses: github/codeql-action/upload-sarif@v4
         if: always()
@@ -171,6 +251,230 @@ jobs:
         with:
           sarif_file: findings.sarif
           category: endorlabs-python
+  scan-c-net-pr:
+    name: "PR Scan: c#/.net"
+    needs: detect-changes
+    if: github.event_name == 'pull_request' && needs.detect-changes.outputs.c-net == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      id-token: write
+      security-events: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - run: dotnet restore
+      - uses: endorlabs/github-action@b8992820cc4d9c9e7ded5022adf6cabe2dc11946
+        with:
+          namespace: "endor-solutions-ypulse.github-ci"
+          scan_dependencies: true
+          pr: true
+          enable_pr_comments: true
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          enable_github_action_token: true
+          additional_args: "--languages=c#,.net --quick-scan"
+    env:
+      ENDOR_SCAN_ENABLE_PRECOMPUTED_CALLGRAPHS: "true"
+  scan-c-net-monitor:
+    name: "Monitor Scan: c#/.net"
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      id-token: write
+      security-events: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - run: dotnet restore
+      - uses: endorlabs/github-action@b8992820cc4d9c9e7ded5022adf6cabe2dc11946
+        with:
+          namespace: "endor-solutions-ypulse.github-ci"
+          scan_dependencies: true
+          pr: false
+          enable_github_action_token: true
+          additional_args: "--languages=c#,.net"
+          sarif_file: findings.sarif
+      - uses: github/codeql-action/upload-sarif@v4
+        if: always()
+        continue-on-error: true
+        with:
+          sarif_file: findings.sarif
+          category: endorlabs-c-net
+  scan-rust-pr:
+    name: "PR Scan: rust"
+    needs: detect-changes
+    if: github.event_name == 'pull_request' && needs.detect-changes.outputs.rust == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      id-token: write
+      security-events: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: endorlabs/github-action@b8992820cc4d9c9e7ded5022adf6cabe2dc11946
+        with:
+          namespace: "endor-solutions-ypulse.github-ci"
+          scan_dependencies: true
+          pr: true
+          enable_pr_comments: true
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          enable_github_action_token: true
+          additional_args: "--languages=rust --exclude-path=src/third_party/mozjs/extract/js/src/fuzz-tests/** --quick-scan"
+    env:
+      ENDOR_SCAN_ENABLE_PRECOMPUTED_CALLGRAPHS: "true"
+  scan-rust-monitor:
+    name: "Monitor Scan: rust"
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      id-token: write
+      security-events: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: endorlabs/github-action@b8992820cc4d9c9e7ded5022adf6cabe2dc11946
+        with:
+          namespace: "endor-solutions-ypulse.github-ci"
+          scan_dependencies: true
+          pr: false
+          enable_github_action_token: true
+          additional_args: "--languages=rust --exclude-path=src/third_party/mozjs/extract/js/src/fuzz-tests/**"
+          sarif_file: findings.sarif
+      - uses: github/codeql-action/upload-sarif@v4
+        if: always()
+        continue-on-error: true
+        with:
+          sarif_file: findings.sarif
+          category: endorlabs-rust
+  scan-ruby-pr:
+    name: "PR Scan: ruby"
+    needs: detect-changes
+    if: github.event_name == 'pull_request' && needs.detect-changes.outputs.ruby == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      id-token: write
+      security-events: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.2"
+          bundler-cache: "true"
+      - uses: endorlabs/github-action@b8992820cc4d9c9e7ded5022adf6cabe2dc11946
+        with:
+          namespace: "endor-solutions-ypulse.github-ci"
+          scan_dependencies: true
+          pr: true
+          enable_pr_comments: true
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          enable_github_action_token: true
+          additional_args: "--languages=ruby --quick-scan"
+    env:
+      ENDOR_SCAN_ENABLE_PRECOMPUTED_CALLGRAPHS: "true"
+  scan-ruby-monitor:
+    name: "Monitor Scan: ruby"
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      id-token: write
+      security-events: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.2"
+          bundler-cache: "true"
+      - uses: endorlabs/github-action@b8992820cc4d9c9e7ded5022adf6cabe2dc11946
+        with:
+          namespace: "endor-solutions-ypulse.github-ci"
+          scan_dependencies: true
+          pr: false
+          enable_github_action_token: true
+          additional_args: "--languages=ruby"
+          sarif_file: findings.sarif
+      - uses: github/codeql-action/upload-sarif@v4
+        if: always()
+        continue-on-error: true
+        with:
+          sarif_file: findings.sarif
+          category: endorlabs-ruby
+  scan-php-pr:
+    name: "PR Scan: php"
+    needs: detect-changes
+    if: github.event_name == 'pull_request' && needs.detect-changes.outputs.php == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      id-token: write
+      security-events: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.2"
+          tools: composer
+      - run: composer install --no-dev
+      - uses: endorlabs/github-action@b8992820cc4d9c9e7ded5022adf6cabe2dc11946
+        with:
+          namespace: "endor-solutions-ypulse.github-ci"
+          scan_dependencies: true
+          pr: true
+          enable_pr_comments: true
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          enable_github_action_token: true
+          additional_args: "--languages=php --quick-scan"
+    env:
+      ENDOR_SCAN_ENABLE_PRECOMPUTED_CALLGRAPHS: "true"
+  scan-php-monitor:
+    name: "Monitor Scan: php"
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      id-token: write
+      security-events: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.2"
+          tools: composer
+      - run: composer install --no-dev
+      - uses: endorlabs/github-action@b8992820cc4d9c9e7ded5022adf6cabe2dc11946
+        with:
+          namespace: "endor-solutions-ypulse.github-ci"
+          scan_dependencies: true
+          pr: false
+          enable_github_action_token: true
+          additional_args: "--languages=php"
+          sarif_file: findings.sarif
+      - uses: github/codeql-action/upload-sarif@v4
+        if: always()
+        continue-on-error: true
+        with:
+          sarif_file: findings.sarif
+          category: endorlabs-php
   scan-swift-pr:
     name: "PR Scan: swift"
     needs: detect-changes
