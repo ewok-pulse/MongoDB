@@ -589,7 +589,7 @@ jobs:
         if: ${{ matrix.bazel_label != '' }}
         run: bazel build "${{ matrix.bazel_label }}"
       - name: Run compiled artifact scan
-        run: endorctl scan --package --path="${{ matrix.package_path }}" --project-name="${{ matrix.project_name }}" --namespace="endor-solutions-ypulse.github-ci" --enable-github-action-token=true
+        run: endorctl scan --namespace="endor-solutions-ypulse.github-ci" --enable-github-action-token=true --package="${{ matrix.package_path }}"
 #
 # Optional coverage add-ons selected in Saber
 #
