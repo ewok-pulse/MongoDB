@@ -582,6 +582,8 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - uses: endorlabs/github-action/setup@b8992820cc4d9c9e7ded5022adf6cabe2dc11946
+        with:
+          namespace: "endor-solutions-ypulse.github-ci"
       - uses: bazelbuild/setup-bazelisk@v3
       - name: Build selected Bazel artifact
         if: ${{ matrix.bazel_label != '' }}
