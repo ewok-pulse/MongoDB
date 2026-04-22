@@ -186,6 +186,11 @@ jobs:
 # Why Saber offered this: vendored C/C++ code ships inside compiled artifacts; Bazel builds compiled binaries that need artifact-level coverage.
 # Not activated as a live job yet.
 # TODO: set ENDOR_SCAN_PACKAGE_PATH to the repo-specific value (dist/app.jar).
+# Commented example step to place after your build step:
+# - name: Compiled artifact scan after the build
+#   if: ${{ env.ENDOR_SCAN_PACKAGE_PATH != '' }}
+#   run: |
+#     endorctl scan --namespace="endor-solutions-ypulse.github-ci" --enable-github-action-token=true --package --path="${ENDOR_SCAN_PACKAGE_PATH}"
 #
 # Container image scan after the build
 # Adds optional container-image CVE coverage for base image layers and OS packages that manifest scans do not see.
@@ -193,4 +198,9 @@ jobs:
 # Not activated as a live job yet.
 # Example image tag format: ghcr.io/${{ github.repository }}:${{ github.sha }}
 # TODO: set ENDOR_SCAN_CONTAINER_IMAGE to the repo-specific value (ghcr.io/your-org/your-image:${{ github.sha }}).
+# Commented example step to place after your image build/push step:
+# - name: Container image scan after the build
+#   if: ${{ env.ENDOR_SCAN_CONTAINER_IMAGE != '' }}
+#   run: |
+#     endorctl container scan --enable-github-action-token=true --image="${ENDOR_SCAN_CONTAINER_IMAGE}" --namespace="endor-solutions-ypulse.github-ci"
 #
